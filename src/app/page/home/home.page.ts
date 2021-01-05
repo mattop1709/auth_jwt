@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { User } from 'src/app/interface/user';
 import { AuthService } from 'src/app/service/auth.service';
 
 @Component({
@@ -6,16 +8,23 @@ import { AuthService } from 'src/app/service/auth.service';
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage implements OnInit {
-  userName: string = '';
+export class HomePage implements OnInit, OnDestroy {
+  userName: string;
+  subscription: Subscription;
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
-    this.authService.userInfo.subscribe(response => {
-      console.log(response);
-      if (response) {
-        this.userName = response.username;
+    this.subscription = this.authService.userInfo.subscribe(
+      (response: User) => {
+        console.log(`this is response -> ${JSON.stringify(response)}`);
+        if (response) {
+          this.userName = response.username;
+        }
       }
-    });
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
 }

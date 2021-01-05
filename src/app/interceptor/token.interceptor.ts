@@ -7,7 +7,7 @@ import {
 import { Injectable } from '@angular/core';
 import { combineLatest, Observable, throwError } from 'rxjs';
 import { AuthService } from 'src/app/service/auth.service';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, switchMap, map } from 'rxjs/operators';
 import { Token } from 'src/app/interface/token';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Storage } from '@ionic/storage';
@@ -20,13 +20,14 @@ export class TokenInterceptor implements HttpInterceptor {
     request: HttpRequest<void>,
     next: HttpHandler
   ): Observable<HttpEvent<void>> {
-    return combineLatest(
+    return combineLatest([
       this.authService.getAccessToken(),
       this.authService.getRefreshToken(),
-      (access_token, refresh_token) => {
-        return { access_token, refresh_token };
-      }
-    ).pipe(
+    ]).pipe(
+      map(([access_token, refresh_token]: string[]) => ({
+        access_token,
+        refresh_token,
+      })),
       /** main interceptor */
       switchMap((token: Token) => {
         /** clone request */
@@ -48,11 +49,11 @@ export class TokenInterceptor implements HttpInterceptor {
             ) {
               return this.authService.refreshAllTokens(token).pipe(
                 switchMap((newToken: Token) => {
-                  const { access_token, refresh_token } = newToken;
-                  this.storage.set('access_token', access_token);
-                  this.storage.set('refresh_token', refresh_token);
-                  const decodedUser = this.jwtHelper.decodeToken(access_token);
-                  this.authService.userInfo.next(decodedUser);
+                  console.log(`New Token ---> ${JSON.stringify(newToken)}`);
+                  const { access_token } = newToken;
+                  this.storeTokens(newToken);
+                  this.decodeUser(access_token);
+
                   const transformedRequest = request.clone({
                     headers: request.headers.set(
                       'Authorization',
@@ -77,7 +78,26 @@ export class TokenInterceptor implements HttpInterceptor {
     );
     /** main intercept end */
   }
+
+  storeTokens(token: Token): void {
+    this.storage.set('access_token', token.access_token);
+    this.storage.set('refresh_token', token.refresh_token);
+  }
+
+  decodeUser(access_token: string): void {
+    const decodedUser = this.jwtHelper.decodeToken(access_token);
+    console.log(decodedUser);
+    this.authService.userInfo.next(decodedUser);
+  }
 }
+
+/*
+this.authService.getAccessToken(),
+      this.authService.getRefreshToken(),
+      (access_token, refresh_token) => {
+        return { access_token, refresh_token };
+      }
+*/
 
 /*
 before include refresh token

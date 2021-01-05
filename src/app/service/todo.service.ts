@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 export class TodoService {
   constructor(private http: HttpClient) {}
 
-  fetchTodos(): Observable<any> {
-    return this.http.get('/todos');
+  fetchTodos(): Observable<string[]> {
+    return this.http.get<string[]>('/todos');
   }
 }

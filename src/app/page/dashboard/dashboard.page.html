@@ -1,5 +1,6 @@
 <ion-header>
   <ion-toolbar>
+    <ion-icon name="arrow-back-outline" slot="start" [routerLink]="['..']"></ion-icon>
     <ion-title>Dashboard</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -9,7 +10,7 @@
   <div>
     <h1>My Todo</h1>
     <ul>
-      <li *ngFor="let todo of todos">{{todo}}</li>
+      <li *ngFor="let todo of todos | async; trackBy:trackByItem">{{todo}}</li>
     </ul>
   </div>
 </ion-content>

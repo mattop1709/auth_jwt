@@ -41,6 +41,7 @@ export class AuthService {
           );
           this.userInfo.next(decodedUser);
           console.log(decodedUser);
+          // this.handleToken(token);
           return true;
         })
       );
@@ -51,20 +52,27 @@ export class AuthService {
   loadUserInfo(): void {
     let readyPlatformObs = from(this.platform.ready());
     this.checkUserObs = readyPlatformObs.pipe(
-      switchMap(() => {
-        return from(this.getAccessToken());
-      }),
+      switchMap(() => from(this.getAccessToken())),
       map((token: string) => {
         if (!token) return null;
         let decodedUser: User = this.jwtHelper.decodeToken(token);
+        console.log(decodedUser);
         this.userInfo.next(decodedUser);
         return true;
       })
     );
   }
 
-  refreshAllTokens(token: Token): Observable<any> {
-    return this.http.post('/auth/refreshtoken', token);
+  handleToken(token: Token): void {
+    this.storage.set('access_token', token.access_token);
+    this.storage.set('refresh_token', token.refresh_token);
+    let decodedUser: User = this.jwtHelper.decodeToken(token.access_token);
+    this.userInfo.next(decodedUser);
+    console.log(decodedUser);
+  }
+
+  refreshAllTokens(token: Token): Observable<Token> {
+    return this.http.post<Token>('/auth/refreshtoken', token);
   }
 
   getAccessToken(): Promise<string> {

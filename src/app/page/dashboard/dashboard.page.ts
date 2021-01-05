@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Observable } from 'rxjs';
 import { AuthService } from 'src/app/service/auth.service';
 import { TodoService } from 'src/app/service/todo.service';
 
@@ -8,7 +9,8 @@ import { TodoService } from 'src/app/service/todo.service';
   styleUrls: ['./dashboard.page.scss'],
 })
 export class DashboardPage implements OnInit {
-  todos: string[] = [];
+  todos: Observable<string[]>;
+
   constructor(
     private authService: AuthService,
     private todoService: TodoService
@@ -18,17 +20,15 @@ export class DashboardPage implements OnInit {
     this.onGetTodos();
   }
 
-  onGetTodos() {
-    this.todoService.fetchTodos().subscribe(
-      (todo: string[]) => {
-        console.log(todo);
-        this.todos = todo;
-      },
-      error => console.log(JSON.stringify(error))
-    );
+  onGetTodos(): void {
+    this.todos = this.todoService.fetchTodos();
   }
 
   onLogout(): void {
     this.authService.revokeAllTokens();
+  }
+
+  trackByItem(index: number, item: string): string {
+    return item;
   }
 }

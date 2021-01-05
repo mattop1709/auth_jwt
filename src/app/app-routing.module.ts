@@ -11,13 +11,14 @@ const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'home',
     pathMatch: 'full',
   },
   {
     path: 'login',
     loadChildren: () =>
       import('./page/login/login.module').then(m => m.LoginPageModule),
+    canActivate: [AuthGuard],
   },
   {
     path: 'dashboard',
